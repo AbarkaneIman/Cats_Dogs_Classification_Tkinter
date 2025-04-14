@@ -1,92 +1,126 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
-import numpy as np
+from utils import add_to_dataset, train_model, predict_image, calculate_dataset_accuracy
 
-# Initialiser les listes
-dataset = [] #Stocker les données prêtes pour l’entraînement
-selected_images_chat = []  #Stocker les chemins des images de chats sélectionnées
-selected_images_dog = []   #Stocker les chemins des images de chiens sélectionnées
+class IAApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Simulation d'une application IA")
+        self.root.geometry("900x600")
 
-# Fenêtre principale
-root = tk.Tk()    #Créer la fenêtre principale
-root.title("Classification Chats vs Chiens")   #Donner un nom visible à la fenêtre de l'application
+        self.tabControl = ttk.Notebook(root)
 
-# Fonctions
-def update_display():
-    for widget in cat_frame.winfo_children():
-        widget.destroy()
-    for widget in dog_frame.winfo_children():
-        widget.destroy()
+        # Tabs
+        self.train_tab = ttk.Frame(self.tabControl)
+        self.test_tab = ttk.Frame(self.tabControl)
+        self.tabControl.add(self.train_tab, text='Entraînement')
+        self.tabControl.add(self.test_tab, text='Test')
+        self.tabControl.pack(expand=1, fill="both")
 
-    # Affichage des chats
-    for idx, image_path in enumerate(selected_images_chat):
-        img = Image.open(image_path)
-        img = img.resize((100, 100))
-        photo = ImageTk.PhotoImage(img)
-        label = tk.Label(cat_frame, image=photo)
-        label.image = photo
-        label.grid(row=idx, column=0, padx=5, pady=5)
+        self.chat_images = []
+        self.chien_images = []
 
-    # Affichage des chiens
-    for idx, image_path in enumerate(selected_images_dog):
-        img = Image.open(image_path)
-        img = img.resize((100, 100))
-        photo = ImageTk.PhotoImage(img)
-        label = tk.Label(dog_frame, image=photo)
-        label.image = photo
-        label.grid(row=idx, column=0, padx=5, pady=5)
+        self.build_train_tab()
+        self.build_test_tab()
 
-def choose_images(label):
-    files = filedialog.askopenfilenames(  #Ouvre une boîte de dialogue pour sélectionner plusieurs images
-        title=f"Choisir des images de {label}",
-        filetypes=[("Image Files", "*.jpg *.jpeg *.png")]
-    )
+    def build_train_tab(self):
+        left_frame = tk.Frame(self.train_tab, width=200)
+        left_frame.pack(side="left", fill="y", padx=10, pady=10)
 
-    if label == "chat":
-        if len(selected_images_chat) + len(files) > 10: #Si oui → affiche un message d’erreur
-            messagebox.showerror("Erreur", "Vous ne pouvez sélectionner que 10 images de chats.")
-            return
-        for file in files:
-            img = Image.open(file).resize((100, 100))  #Ouvre et redimensionne chaque image
-            dataset.append((np.array(img).flatten(), "chat"))  #ransforme l'image en vecteur (pour un futur modèle)
-            selected_images_chat.append(file)
+        tk.Label(left_frame, text="Dataset", font=("Arial", 12)).pack(pady=5)
+        # icons
+        for _ in range(6):
+            img = tk.Label(left_frame, text="🐶🐱", font=("Arial", 18))
+            img.pack(pady=5)
 
-    elif label == "chien":
-        if len(selected_images_dog) + len(files) > 10:
-            messagebox.showerror("Erreur", "Vous ne pouvez sélectionner que 10 images de chiens.")
-            return
-        for file in files:
-            img = Image.open(file).resize((100, 100))
-            dataset.append((np.array(img).flatten(), "chien")) #	Stocke l’image + son label
-            selected_images_dog.append(file) #Liste des chemins d’images pour l’affichage graphique
+        right_frame = tk.Frame(self.train_tab)
+        right_frame.pack(side="right", expand=True, padx=10, pady=10)
 
-    update_display() #Rafraîchit l’affichage dans l’interface Tkinter
+        # Chat images
+        tk.Label(right_frame, text="Sélectionner 10 images de chats").pack()
+        self.chat_frame = tk.Frame(right_frame)
+        self.chat_frame.pack()
+        self.chat_buttons = [self.create_image_slot(self.chat_frame, "chat") for _ in range(10)]
 
-def train_model():
-    if len(selected_images_chat) != 10 or len(selected_images_dog) != 10:
-        messagebox.showwarning("Incomplet", "Veuillez sélectionner 10 images de chats ET 10 images de chiens.")
-        return
-    messagebox.showinfo("Modèle", "Le modèle est entraîné avec succès 🎉 (simulation).")
+        # Chien images
+        tk.Label(right_frame, text="Sélectionner 10 images de chien").pack(pady=(10, 0))
+        self.chien_frame = tk.Frame(right_frame)
+        self.chien_frame.pack()
+        self.chien_buttons = [self.create_image_slot(self.chien_frame, "chien") for _ in range(10)]
 
-# Interface
-tk.Label(root, text="Projet de Classification : Chats vs Chiens", font=("Arial", 16)).pack(pady=10)
+        self.train_button = tk.Button(right_frame, text="Entraîner", command=self.train)
+        self.train_button.pack(pady=10)
 
-frames_container = tk.Frame(root)
-frames_container.pack()
+    def create_image_slot(self, parent, label):
+        slot = tk.Label(parent, width=10, height=5, relief="ridge", bd=2)
+        slot.pack(side="left", padx=2, pady=2)
+        slot.bind("<Button-1>", lambda e: self.select_image(slot, label))
+        return slot
 
-cat_frame = tk.LabelFrame(frames_container, text="Chats", padx=10, pady=10)
-cat_frame.grid(row=0, column=0, padx=10)
+    def select_image(self, slot, label):
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            img = Image.open(file_path).resize((50, 50))
+            tk_img = ImageTk.PhotoImage(img)
+            slot.image = tk_img
+            slot.config(image=tk_img)
+            add_to_dataset(file_path, label)
 
-dog_frame = tk.LabelFrame(frames_container, text="Chiens", padx=10, pady=10)
-dog_frame.grid(row=0, column=1, padx=10)
+    def train(self):
+        success = train_model()
+        if success:
+            messagebox.showinfo("Succès", "Modèle entraîné avec succès !")
+        else:
+            messagebox.showerror("Erreur", "Erreur lors de l'entraînement")
 
-btns = tk.Frame(root)
-btns.pack(pady=10)
+    def build_test_tab(self):
+        instruction = tk.Label(self.test_tab, text="(1) Sélectionner une nouvelle photo\n(2) Cliquer sur Prédiction\n(3) Voir le résultat", justify="left")
+        instruction.pack(anchor="nw", padx=20, pady=10)
 
-tk.Button(btns, text="Sélectionner des images de chats", command=lambda: choose_images("chat")).grid(row=0, column=0, padx=10)
-tk.Button(btns, text="Sélectionner des images de chiens", command=lambda: choose_images("chien")).grid(row=0, column=1, padx=10)
+        frame = tk.Frame(self.test_tab)
+        frame.pack(padx=20, pady=10)
 
-tk.Button(root, text="Entraîner le modèle", command=train_model).pack(pady=20)
+        # Section gauche
+        left = tk.Frame(frame)
+        left.pack(side="left", padx=20)
 
-root.mainloop()
+        tk.Label(left, text="Nouvelle photo").pack()
+        self.btn_browse = tk.Button(left, text="Parcourir", command=self.choose_test_image)
+        self.btn_browse.pack(pady=10)
+        self.selected_img_path = None
+
+        # Section droite
+        right = tk.Frame(frame)
+        right.pack(side="left", padx=20)
+
+        tk.Label(right, text="Photo sélectionnée").pack()
+        self.img_preview = tk.Label(right)
+        self.img_preview.pack(pady=5)
+
+        self.predict_button = tk.Button(right, text="Prédiction", command=self.predict)
+        self.predict_button.pack(pady=5)
+
+        self.result_label = tk.Label(right, text="", bg="#fdf5d7", font=("Arial", 16), width=20)
+        self.result_label.pack(pady=5)
+
+    def choose_test_image(self):
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            self.selected_img_path = file_path
+            img = Image.open(file_path).resize((100, 100))
+            tk_img = ImageTk.PhotoImage(img)
+            self.img_preview.image = tk_img
+            self.img_preview.config(image=tk_img)
+
+    def predict(self):
+        if self.selected_img_path:
+            label, confidence = predict_image(self.selected_img_path)
+            self.result_label.config(text=f"{confidence}% {label}")
+        else:
+            messagebox.showwarning("Attention", "Veuillez choisir une image d'abord.")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = IAApp(root)
+    root.mainloop()
