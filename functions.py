@@ -1,43 +1,86 @@
-from tkinter import filedialog
-from PIL import Image
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
+
+
+# Dossiers pour stocker les images de chats et de chiens
+CAT_FOLDER = "cats_dogs_classification_project/images/cats"
+DOG_FOLDER = "cats_dogs_classification_project/images/dogs"
+
+# Initialiser les listes
+dataset = []  # Stocker les données prêtes pour l’entraînement
+selected_images_chat = []  # Stocker les chemins des images de chats sélectionnées
+selected_images_dog = []   # Stocker les chemins des images de chiens sélectionnées
+
+
+# Vérifier si les dossiers existent, sinon les créer
+def create_folders():
+    if not os.path.exists(CAT_FOLDER):
+        os.makedirs(CAT_FOLDER)
+    if not os.path.exists(DOG_FOLDER):
+        os.makedirs(DOG_FOLDER)
+
+        
+# Fonction pour mettre à jour l'affichage
+def update_display(cat_frame, dog_frame):
+    for widget in cat_frame.winfo_children():
+        widget.destroy()
+    for widget in dog_frame.winfo_children():
+        widget.destroy()
+
+    # Affichage des chats
+    for idx, image_path in enumerate(selected_images_chat):
+        img = Image.open(image_path)
+        img = img.resize((100, 100))
+        photo = ImageTk.PhotoImage(img)
+        label = tk.Label(cat_frame, image=photo)
+        label.image = photo
+        label.grid(row=idx, column=0, padx=5, pady=5)
+
+    # Affichage des chiens
+    for idx, image_path in enumerate(selected_images_dog):
+        img = Image.open(image_path)
+        img = img.resize((100, 100))
+        photo = ImageTk.PhotoImage(img)
+        label = tk.Label(dog_frame, image=photo)
+        label.image = photo
+        label.grid(row=idx, column=0, padx=5, pady=5)
 
 # Fonction pour choisir les images
-def choose_images(label, dataset):
-    images = []
-    for _ in range(10):
-        file = filedialog.askopenfilename(title=f"Choisir une image de {label}", filetypes=[("Image Files", "*.jpg;*.png")])
-        if file:
-            img = Image.open(file)
-            img = img.resize((100, 100))  # Redimensionner l'image
-            img_array = np.array(img)  # Convertir en tableau numpy
-            images.append((img_array.flatten(), label))  # Ajouter l'image et l'étiquette
-    dataset.extend(images)
+def choose_images(label, cat_frame, dog_frame):
+    files = filedialog.askopenfilenames(
+        title=f"Choisir des images de {label}",
+        filetypes=[("Image Files", "*.jpg *.jpeg *.png")]
+    )
 
-# Fonction d'entraînement (Simuler le processus)
-def train_model(dataset):
-    # On considère que l'entraînement a simplement constitué de stocker les données
-    return dataset
+    if label == "chat":
+        if len(selected_images_chat) + len(files) > 10:
+            messagebox.showerror("Erreur", "Vous ne pouvez sélectionner que 10 images de chats.")
+            return
+        for file in files:
+            img = Image.open(file).resize((100, 100))
+            dataset.append((np.array(img).flatten(), "chat"))
+            selected_images_chat.append(file)
 
-# Fonction pour tester une image
-def test_image(test_image_path, dataset):
-    test_img = Image.open(test_image_path).resize((100, 100))
-    test_img_array = np.array(test_img).flatten()
+    elif label == "chien":
+        if len(selected_images_dog) + len(files) > 10:
+            messagebox.showerror("Erreur", "Vous ne pouvez sélectionner que 10 images de chiens.")
+            return
+        for file in files:
+            img = Image.open(file).resize((100, 100))
+            dataset.append((np.array(img).flatten(), "chien"))
+            selected_images_dog.append(file)
 
-    # Comparer avec les images du dataset
-    best_match = None
-    best_score = float('inf')  # On cherche la plus petite différence
+    update_display(cat_frame, dog_frame)
 
-    for img_array, label in dataset:
-        score = np.linalg.norm(test_img_array - img_array)  # Calcul de la distance euclidienne
-        if score < best_score:
-            best_score = score
-            best_match = label
+# Fonction pour entraîner le modèle
+def train_model():
+    if len(selected_images_chat) != 10 or len(selected_images_dog) != 10:
+        messagebox.showwarning("Incomplet", "Veuillez sélectionner 10 images de chats ET 10 images de chiens.")
+        return
+    messagebox.showinfo("Modèle", "Le modèle est entraîné avec succès 🎉 (simulation).")
 
-    # Retourne l'étiquette la plus proche
-    return best_match
-
-# Ajoute cette fonction dans ton code principal `main.py`
 
 """
 from tkinter import filedialog

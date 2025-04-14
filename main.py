@@ -1,3 +1,4 @@
+"""
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
@@ -88,5 +89,19 @@ tk.Button(btns, text="Sélectionner des images de chats", command=lambda: choose
 tk.Button(btns, text="Sélectionner des images de chiens", command=lambda: choose_images("chien")).grid(row=0, column=1, padx=10)
 
 tk.Button(root, text="Entraîner le modèle", command=train_model).pack(pady=20)
+
+root.mainloop()
+"""
+import tkinter as tk
+from interfaces_design import build_ui
+
+root = tk.Tk()
+root.title("Classification Chats vs Chiens")
+
+# Définir les dimensions initiales (par exemple 800x600)
+root.geometry("800x600")
+
+# Construction de l'interface
+build_ui(root)
 
 root.mainloop()
