@@ -93,15 +93,18 @@ tk.Button(root, text="Entraîner le modèle", command=train_model).pack(pady=20)
 root.mainloop()
 """
 import tkinter as tk
-from interfaces_design import build_ui
+from interfaces_design import build_ui  # Assure-toi d’avoir ce fichier ui.py
 
+# Fenêtre principale
 root = tk.Tk()
 root.title("Classification Chats vs Chiens")
 
-# Définir les dimensions initiales (par exemple 800x600)
+# Définir les dimensions
+#  initiales (par exemple 800x600)
 root.geometry("800x600")
 
-# Construction de l'interface
+# Construire l'interface à partir du fichier ui.py
 build_ui(root)
-
+root.configure(bg="#F8F8FF")  # Changer la couleur de fond de la fenêtre principale
+# Lancer la boucle principale
 root.mainloop()
