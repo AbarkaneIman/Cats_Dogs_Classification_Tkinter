@@ -1,5 +1,5 @@
 import tkinter as tk
-from functions import choose_images, update_display, train_model
+from functions import choose_images, extract_colors_from_folder, update_display, train_model
 
 def build_ui(root):
     root.geometry("800x600")  # Taille initiale de la fenêtre
@@ -8,8 +8,8 @@ def build_ui(root):
     tk.Label(root, text="Projet de Classification : Chats vs Chiens", font=("Arial", 30)).pack(pady=10)
 
     # Conteneur principal
-    frames_container = tk.Frame(root,bg="#F8F8FF")
-    frames_container.pack()
+    frames_container = tk.Frame(root, bg="#F8F8FF")
+    frames_container.pack(pady=20)
 
     # ------- Cadre pour les chats -------
     chat_container = tk.Frame(frames_container)
@@ -20,9 +20,9 @@ def build_ui(root):
                        fg="white",    # Couleur du texte en blanc
                        font=("Arial", 12, "bold"),  # Police Arial, taille 12, en gras
                        relief="raised",  # Bordure en relief
-                       bd=5,text="Sélectionner des images de chats",
+                       bd=5, text="Sélectionner des images de chats",
                        compound="left",  # Positionne l'image à gauche du texte
-                       command=lambda: choose_images("chat", cat_frame, dog_frame)
+                       command=lambda: choose_images("chat", cat_frame, dog_frame)  # Appel de la fonction pour les chats
                        ).pack(pady=5)
 
     cat_frame = tk.Frame(chat_container, width=300, height=300, bg="white", highlightbackground="black", highlightthickness=2)
@@ -39,13 +39,19 @@ def build_ui(root):
                        relief="raised",  # Bordure en relief
                        bd=5,  # Épaisseur de la bordure
                        text="Sélectionner des images de chiens",  # Texte du bouton
-                         # L'image à afficher
                        compound="left",  # Positionne l'image à gauche du texte
-                       command=lambda: choose_images("chien", cat_frame, dog_frame)
+                       command=lambda: choose_images("chien", cat_frame, dog_frame)  # Appel de la fonction pour les chiens
                        ).pack(pady=10)
 
-    dog_frame = tk.Frame(dog_container,  width=300, height=300, bg="white", highlightbackground="black", highlightthickness=2)
+    dog_frame = tk.Frame(dog_container, width=300, height=300, bg="white", highlightbackground="black", highlightthickness=2)
     dog_frame.pack()
+# ------- Bouton d'entraînement -------
+    tk.Button(root, 
+          bg="#C2B280", 
+          text="Entraîner le modèle", 
+          command=train_model)\
+          .pack(pady=20)
 
-    # ------- Bouton d'entraînement -------
-    tk.Button(root, bg="#C2B280", text="Entraîner le modèle", command=train_model).pack(pady=20)
+    # Ce bouton doit appeler une fonction qui va extraire les couleurs des images des chats et des chiens
+
+

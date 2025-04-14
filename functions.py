@@ -3,6 +3,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
+import cv2
 
 
 # Dossiers pour stocker les images de chats et de chiens
@@ -107,6 +108,79 @@ def extract_dominant_color(img_path):
     return tuple(avg_color.astype(int))  # Retourner les valeurs moyennes des couleurs
 
 
+# Fonction pour extraire les couleurs dominantes des images dans un dossier
+def extract_colors_from_folder(folder_path):
+    dominant_colors = []
+    for filename in os.listdir(folder_path):
+        img_path = os.path.join(folder_path, filename)
+        
+        # Vérifier que l'élément est une image avec l'extension appropriée
+        if img_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            dominant_color = extract_dominant_color(img_path)
+            dominant_colors.append(dominant_color)
+    
+    return dominant_colors
+
+
+# Extraire les couleurs dominantes des images dans le dossier des chats et des chiens
+cats_colors = extract_colors_from_folder(CAT_FOLDER)
+dogs_colors = extract_colors_from_folder(DOG_FOLDER)
+
+
+# Afficher les couleurs dominantes extraites
+print(f"Couleurs dominantes des chats: {cats_colors}")
+print(f"Couleurs dominantes des chiens: {dogs_colors}")
+
+
+#fonction pour detecter la forme approximative des yeux 
+def detect_eye_shapes(folder_path):
+    eye_shapes = []
+
+    for filename in os.listdir(folder_path):
+        if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+            img_path = os.path.join(folder_path, filename)
+            img = cv2.imread(img_path)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+            # Utiliser un classifieur pré-entraîné pour détecter les yeux
+            eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+            eyes = eye_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+
+            for (x, y, w, h) in eyes:
+                roi = gray[y:y+h, x:x+w]  # Extraire la région des yeux
+                shape = "rond" if w/h < 1.2 else "allongé"  # Forme simple selon le ratio largeur/hauteur
+                eye_shapes.append(shape)
+                break  # On ne prend qu’un œil par image pour simplifier
+
+    return eye_shapes
+
+
+# Extraire la forme approximative des yeux depuis des images dans le dossier des chats et des chiens
+cat_eye_shapes = detect_eye_shapes(CAT_FOLDER)
+dog_eye_shapes = detect_eye_shapes(DOG_FOLDER)
+
+print(f"Formes des yeux des chats : {cat_eye_shapes}")
+print(f"Formes des yeux des chiens : {dog_eye_shapes}")
+
+
+def train_model():
+    cats_colors = extract_colors_from_folder(CAT_FOLDER)
+    dogs_colors = extract_colors_from_folder(DOG_FOLDER)
+
+    cat_eye_shapes = detect_eye_shapes(CAT_FOLDER)
+    dog_eye_shapes = detect_eye_shapes(DOG_FOLDER)
+
+    print(f"Couleurs dominantes des chats: {cats_colors}")
+    print(f"Couleurs dominantes des chiens: {dogs_colors}")
+
+    print(f"Formes des yeux des chats : {cat_eye_shapes}")
+    print(f"Formes des yeux des chiens : {dog_eye_shapes}")
+
+    messagebox.showinfo("Entraînement terminé", "Les données ont été extraites avec succès !")
+
+
+
+"""
 # Fonction de classification : Classer l'image en chat ou chien basé sur la couleur dominante
 def classify_image(img_path, cat_colors, dog_colors):
     dominant_color = extract_dominant_color(img_path)
@@ -122,9 +196,9 @@ def classify_image(img_path, cat_colors, dog_colors):
         return "chien"
     
 
-
     # Fonction pour entraîner le modèle basé sur les couleurs dominantes
 def train_model():
     if len(selected_images_chat) != 10 or len(selected_images_dog) != 10:
         messagebox.showwarning("Incomplet", "Veuillez sélectionner 10 images de chats ET 10 images de chiens.")
         return
+"""
