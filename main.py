@@ -92,8 +92,10 @@ tk.Button(root, text="Entraîner le modèle", command=train_model).pack(pady=20)
 
 root.mainloop()
 """
+
 import tkinter as tk
 from interfaces_design import build_ui  # Assure-toi d’avoir ce fichier ui.py
+from functions import create_folders
 
 # Fenêtre principale
 root = tk.Tk()

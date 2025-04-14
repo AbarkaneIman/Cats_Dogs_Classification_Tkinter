@@ -6,8 +6,8 @@ from PIL import Image, ImageTk
 
 
 # Dossiers pour stocker les images de chats et de chiens
-CAT_FOLDER = "cats_dogs_classification_project/images/cats"
-DOG_FOLDER = "cats_dogs_classification_project/images/dogs"
+CAT_FOLDER = "C:/Users/pc/Desktop/python projects/tkinter_projetcs/cats_dogs_classification_project/images/cats"
+DOG_FOLDER = "C:/Users/pc/Desktop/python projects/tkinter_projetcs/cats_dogs_classification_project/images/dogs"
 
 # Initialiser les listes
 dataset = []  # Stocker les données prêtes pour l’entraînement
@@ -97,7 +97,7 @@ def choose_images(label, cat_frame, dog_frame):
 
 
 
-# Fonction pour extraire la couleur dominante 
+# Fonction pour extraire la couleur dominante
 def extract_dominant_color(img_path):
     img = Image.open(img_path).resize((100, 100))  # Redimensionner l'image à une taille fixe
     img_array = np.array(img)  # Convertir l'image en tableau numpy
