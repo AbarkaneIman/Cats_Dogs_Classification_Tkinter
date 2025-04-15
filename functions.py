@@ -7,6 +7,7 @@ import cv2
 import random
 
 
+
 # Dossiers pour stocker les images de chats et de chiens
 CAT_FOLDER = r"C:\Users\nihad\OneDrive\Desktop\master\python\Cats_Dogs_Classification_Tkinter\images\cats"
 
@@ -188,6 +189,7 @@ def fake_predict_image(img_path):
     label = random.choice(["chat", "chien"])
     pourcentage = random.randint(50, 99)
     return f"{pourcentage}% {label}"
+
 
 
 
