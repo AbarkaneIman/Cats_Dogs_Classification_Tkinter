@@ -9,9 +9,10 @@ from PIL import Image, ImageTk
 
 
 # Dossiers pour stocker les images de chats et de chiens
-CAT_FOLDER = r"C:\Users\nihad\OneDrive\Desktop\master\python\Cats_Dogs_Classification_Tkinter\images\cats"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DOG_FOLDER = r"C:\Users\nihad\OneDrive\Desktop\master\python\Cats_Dogs_Classification_Tkinter\images\dogs"
+CAT_FOLDER = os.path.join(BASE_DIR, "images", "cats")
+DOG_FOLDER = os.path.join(BASE_DIR, "images", "dogs")
 
 # Initialiser les listes
 dataset = []  # Stocker les données prêtes pour l’entraînement
@@ -156,6 +157,30 @@ dog_eye_shapes = detect_eye_shapes(DOG_FOLDER)
 print(f"Formes des yeux des chats : {cat_eye_shapes}")
 print(f"Formes des yeux des chiens : {dog_eye_shapes}")
 
+# oreills shape 
+def detect_ear_shape(img_path):
+    img = cv2.imread(img_path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    edges = cv2.Canny(blurred, 50, 150)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    sharp_points = 0
+
+    for cnt in contours:
+        approx = cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
+        if len(approx) == 3:
+            x, y, w, h = cv2.boundingRect(cnt)
+            if y < img.shape[0] // 2:  # Partie haute
+                sharp_points += 1
+
+    if sharp_points >= 2:
+        return "pointues"
+    else:
+        return "arrondies"
+
+
 def train_model():
     cats_colors = extract_colors_from_folder(CAT_FOLDER)
     dogs_colors = extract_colors_from_folder(DOG_FOLDER)
@@ -170,12 +195,27 @@ def train_model():
     print(f"Formes des yeux des chiens : {dog_eye_shapes}")
 
     messagebox.showinfo("Entraînement terminé", "Les données ont été extraites avec succès !")
+def compare_color_distance(dominant_color, reference_colors):
+    # reference_colors ممكن تكون cats_colors أو dogs_colors
+    distances = []
+    for ref in reference_colors:
+        # حساب المسافة اللونية (مثال Euclidean)
+        dist = ((dominant_color[0] - ref[0]) ** 2 +
+                (dominant_color[1] - ref[1]) ** 2 +
+                (dominant_color[2] - ref[2]) ** 2) ** 0.5
+        distances.append(dist)
 
-def compare_color_distance(color1, color_list):
-    distances = [np.linalg.norm(np.array(color1) - np.array(c)) for c in color_list]
-    return min(distances)  # color
+    # **إضافة التحقق هنا**
+    if not distances:
+        # إذا ما كاين حتى لون في reference_colors، نرجع قيمة كبيرة
+        return float('inf')
+
+    return min(distances)
+
 
 def predict_image(img_path):
+    total_score_cat = 0
+    total_score_dog = 0
     dominant_color = extract_dominant_color(img_path)
     
     # shape of eyes
@@ -189,15 +229,32 @@ def predict_image(img_path):
         eye_shape = "rond" if ratio < 1.2 else "allongé"
         break
 
-    # Comparaison avec les données entraînées
+    # Comparaison des couleurs
     color_distance_cat = compare_color_distance(dominant_color, cats_colors)
     color_distance_dog = compare_color_distance(dominant_color, dogs_colors)
 
+    # Comparaison des yeux
     eye_score_cat = 0 if eye_shape in cat_eye_shapes else 1
     eye_score_dog = 0 if eye_shape in dog_eye_shapes else 1
 
-    total_score_cat = color_distance_cat + (eye_score_cat * 50)
-    total_score_dog = color_distance_dog + (eye_score_dog * 50)
+    # Forme des oreilles
+    ear_shape = detect_ear_shape(img_path)
+
+    # Extraire les formes d'oreilles des images d'entraînement
+    cat_ears = [detect_ear_shape(os.path.join(CAT_FOLDER, f)) 
+                for f in os.listdir(CAT_FOLDER) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    dog_ears = [detect_ear_shape(os.path.join(DOG_FOLDER, f)) 
+                for f in os.listdir(DOG_FOLDER) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+
+    matched_cat = cat_ears.count(ear_shape)
+    matched_dog = dog_ears.count(ear_shape)
+
+    ear_score_cat = matched_cat / len(cat_ears) if len(cat_ears) > 0 else 0
+    ear_score_dog = matched_dog / len(dog_ears) if len(dog_ears) > 0 else 0
+
+    # Calcul total des scores
+    total_score_cat = color_distance_cat + (eye_score_cat * 50) + (1 - ear_score_cat) * 50
+    total_score_dog = color_distance_dog + (eye_score_dog * 50) + (1 - ear_score_dog) * 50
 
     if total_score_cat < total_score_dog:
         confidence = max(50, int(100 - total_score_cat))
@@ -205,6 +262,3 @@ def predict_image(img_path):
     else:
         confidence = max(50, int(100 - total_score_dog))
         return f"{confidence}% chien"
-
-
-

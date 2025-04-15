@@ -78,7 +78,7 @@ def build_ui(root):
     tk.Label(frame_right, text="Puis cliquer sur prédiction", font=("Arial", 10)).pack(pady=5)
 
     result_label = tk.Label(frame_right, text="", bg="lightyellow", font=("Arial", 14))
-    result_label.pack(pady=20)
+    result_label.pack(pady=30)
 
     def on_predict_click():
         if selected_image_path:
