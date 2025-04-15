@@ -8,9 +8,9 @@ import random
 
 
 # Dossiers pour stocker les images de chats et de chiens
-CAT_FOLDER="cats_dogs_classification_project/assets/images/cats"
+CAT_FOLDER="cats_dogs_classification_project/images/cats"
 
-DOG_FOLDER ="cats_dogs_classification_project/assets/images/dogs"
+DOG_FOLDER ="cats_dogs_classification_project/images/dogs"
 
 # Initialiser les listes
 dataset = []  # Stocker les données prêtes pour l’entraînement
