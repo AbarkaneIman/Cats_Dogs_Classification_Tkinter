@@ -4,11 +4,13 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 import cv2
+import random
 
 
 # Dossiers pour stocker les images de chats et de chiens
-CAT_FOLDER = "C:/Users/pc/Desktop/python projects/tkinter_projetcs/cats_dogs_classification_project/images/cats"
-DOG_FOLDER = "C:/Users/pc/Desktop/python projects/tkinter_projetcs/cats_dogs_classification_project/images/dogs"
+CAT_FOLDER = r"C:\Users\nihad\OneDrive\Desktop\master\python\Cats_Dogs_Classification_Tkinter\images\cats"
+
+DOG_FOLDER = r"C:\Users\nihad\OneDrive\Desktop\master\python\Cats_Dogs_Classification_Tkinter\images\dogs"
 
 # Initialiser les listes
 dataset = []  # Stocker les données prêtes pour l’entraînement
@@ -177,6 +179,16 @@ def train_model():
     print(f"Formes des yeux des chiens : {dog_eye_shapes}")
 
     messagebox.showinfo("Entraînement terminé", "Les données ont été extraites avec succès !")
+
+
+    
+
+def fake_predict_image(img_path):
+    # Simuler une prédiction aléatoire entre "chat" ou "chien"
+    label = random.choice(["chat", "chien"])
+    pourcentage = random.randint(50, 99)
+    return f"{pourcentage}% {label}"
+
 
 
 

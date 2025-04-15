@@ -1,5 +1,9 @@
 import tkinter as tk
 from functions import choose_images, extract_colors_from_folder, update_display, train_model
+from functions import fake_predict_image
+from tkinter import *
+from tkinter import filedialog
+from PIL import Image, ImageTk
 
 def build_ui(root):
     root.geometry("800x600")  # Taille initiale de la fenêtre
@@ -55,3 +59,52 @@ def build_ui(root):
     # Ce bouton doit appeler une fonction qui va extraire les couleurs des images des chats et des chiens
 
 
+def on_predict_click():
+    if selected_image_path:
+        result = fake_predict_image(selected_image_path)
+        result_label.config(text=result)
+
+
+selected_image_path = ""
+
+def build_ui(root):
+    root.title("Simulation d'une application IA")
+    root.geometry("800x500")
+
+    # Frame gauche
+    frame_left = Frame(root, bd=2, relief="groove")
+    frame_left.pack(side=LEFT, fill=Y, padx=10, pady=10)
+
+    Label(frame_left, text="Nouvelle photo", font=("Arial", 12)).pack(pady=10)
+
+    img_placeholder = Label(frame_left, text="Chat ou chien ", width=20, height=10, bg="white")
+    img_placeholder.pack(pady=10)
+
+    def browse_image():
+        global selected_image_path
+        selected_image_path = filedialog.askopenfilename()
+        if selected_image_path:
+            img = Image.open(selected_image_path)
+            img = img.resize((150, 150))
+            img_tk = ImageTk.PhotoImage(img)
+            img_placeholder.config(image=img_tk, text="")
+            img_placeholder.image = img_tk
+
+    Button(frame_left, text="Parcourir", command=browse_image).pack(pady=10)
+
+    # Frame droite
+    frame_right = Frame(root, bd=2, relief="groove")
+    frame_right.pack(side=RIGHT, expand=True, fill=BOTH, padx=10, pady=10)
+
+    Label(frame_right, text="Photo sélectionnée", font=("Arial", 12)).pack(pady=10)
+    Label(frame_right, text="puis cliquer sur prédiction", font=("Arial", 10)).pack(pady=5)
+
+    result_label = Label(frame_right, text="", bg="lightyellow", font=("Arial", 14))
+    result_label.pack(pady=20)
+
+    def on_predict_click():
+        if selected_image_path:
+            result = fake_predict_image(selected_image_path)
+            result_label.config(text=result)
+
+    Button(frame_right, text="Prédiction", command=on_predict_click).pack(pady=5)
