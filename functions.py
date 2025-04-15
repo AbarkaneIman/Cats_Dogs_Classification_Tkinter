@@ -3,30 +3,28 @@ import os
 import tkinter as tk
 import cv2
 import random
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, Label
 from PIL import Image, ImageTk
 
 
-
-# Dossiers pour stocker les images de chats et de chiens
+# ***************************Dossiers pour stocker les images de chats et de chiens
 CAT_FOLDER="assets/images/cats"
-
 DOG_FOLDER ="assets/images/dogs"
-# Initialiser les listes
+
+
+# ***************Initialiser les listes
 dataset = []  # Stocker les données prêtes pour l’entraînement
 selected_images_chat = []  # Stocker les chemins des images de chats sélectionnées
 selected_images_dog = []   # Stocker les chemins des images de chiens sélectionnées
 
-# Vérifier si les dossiers existent, sinon les créer
+#************************** Vérifier si les dossiers existent, sinon les créer
 def create_folders():
     if not os.path.exists(CAT_FOLDER):
         os.makedirs(CAT_FOLDER)
     if not os.path.exists(DOG_FOLDER):
         os.makedirs(DOG_FOLDER)
 
-from tkinter import Label
-from PIL import Image, ImageTk
-
+#************************ fonction qui affiche les images dans les frames 
 def update_display(cat_frame, dog_frame):
     # Efface le contenu précédent des frames
     for widget in cat_frame.winfo_children():
@@ -54,7 +52,6 @@ def update_display(cat_frame, dog_frame):
         img = Image.open(image_path)
         img = img.resize((100, 100))  # Redimensionne l'image
         photo = ImageTk.PhotoImage(img)
-
         # Calculer la ligne et la colonne pour placer l'image
         row = idx // 5  # 5 images par ligne
         col = idx % 5   # Le reste après division pour déterminer la colonne
@@ -64,7 +61,7 @@ def update_display(cat_frame, dog_frame):
         label.image = photo  # Garder une référence de l'image
         label.grid(row=row, column=col, padx=5, pady=5)
 
-# Fonction pour choisir les images
+# **********************************Fonction pour choisir les images
 def choose_images(label, cat_frame, dog_frame):
     files = filedialog.askopenfilenames(
         title=f"Choisir des images de {label}",
@@ -96,7 +93,7 @@ def choose_images(label, cat_frame, dog_frame):
     update_display(cat_frame, dog_frame)
 
 
-# Fonction pour extraire la couleur dominante
+#****************** Fonction pour extraire la couleur dominante
 def extract_dominant_color(img_path):
     img = Image.open(img_path).resize((100, 100))  # Redimensionner l'image à une taille fixe
     img_array = np.array(img)  # Convertir l'image en tableau numpy
@@ -105,7 +102,8 @@ def extract_dominant_color(img_path):
     avg_color = img_array.mean(axis=(0, 1))  # Moyenne des pixels en R, G, B
     return tuple(avg_color.astype(int))  # Retourner les valeurs moyennes des couleurs
 
-# Fonction pour extraire les couleurs dominantes des images dans un dossier
+
+# ********************Fonction pour extraire les couleurs dominantes des images dans un dossier
 def extract_colors_from_folder(folder_path):
     dominant_colors = []
     for filename in os.listdir(folder_path):
@@ -118,15 +116,20 @@ def extract_colors_from_folder(folder_path):
     
     return dominant_colors
 
-# Extraire les couleurs dominantes des images dans le dossier des chats et des chiens
+
+
+
+# ***********************Extraire les couleurs dominantes des images dans le dossier des chats et des chiens
 cats_colors = extract_colors_from_folder(CAT_FOLDER)
 dogs_colors = extract_colors_from_folder(DOG_FOLDER)
 
-# Afficher les couleurs dominantes extraites
+# *********************************Afficher les couleurs dominantes extraites
 print(f"Couleurs dominantes des chats: {cats_colors}")
 print(f"Couleurs dominantes des chiens: {dogs_colors}")
 
-#fonction pour detecter la forme approximative des yeux 
+
+
+#*******************************fonction pour detecter la forme approximative des yeux 
 def detect_eye_shapes(folder_path):
     eye_shapes = []
 
@@ -145,16 +148,45 @@ def detect_eye_shapes(folder_path):
                 shape = "rond" if w/h < 1.2 else "allongé"  # Forme simple selon le ratio largeur/hauteur
                 eye_shapes.append(shape)
                 break  # On ne prend qu’un œil par image pour simplifier
-
     return eye_shapes
 
-# Extraire la forme approximative des yeux depuis des images dans le dossier des chats et des chiens
+# *****************************Extraire la forme approximative des yeux depuis des images dans le dossier des chats et des chiens
 cat_eye_shapes = detect_eye_shapes(CAT_FOLDER)
 dog_eye_shapes = detect_eye_shapes(DOG_FOLDER)
 
 print(f"Formes des yeux des chats : {cat_eye_shapes}")
 print(f"Formes des yeux des chiens : {dog_eye_shapes}")
 
+#fonction pour estimer la taille d un animal depuis une image
+def estimer_taille_animal(image_path):
+    # Charger l'image en niveaux de gris
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    # Appliquer un flou pour enlever du bruit
+    blurred = cv2.GaussianBlur(image, (5, 5), 0)
+    # Détection des contours
+    _, threshold = cv2.threshold(blurred, 50, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # Trouver les contours
+    contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Trouver le plus grand contour (supposé être l'animal)
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        animal_area = cv2.contourArea(largest_contour)
+    else:
+        animal_area = 0
+    # Taille totale de l'image
+    total_area = image.shape[0] * image.shape[1]
+    # Proportion de l’image occupée par l’animal
+    taille_relative = animal_area / total_area
+    return taille_relative
+ 
+ #********** fonction qui comparer la couleur dune image avec les couleurs qui existe deja traites 
+def compare_color_distance(color1, color_list):
+    distances = [np.linalg.norm(np.array(color1) - np.array(c)) for c in color_list]
+    return min(distances)  # color
+
+
+    
+#**************** fonction qui entrainer le modele
 def train_model():
     cats_colors = extract_colors_from_folder(CAT_FOLDER)
     dogs_colors = extract_colors_from_folder(DOG_FOLDER)
@@ -170,10 +202,8 @@ def train_model():
 
     messagebox.showinfo("Entraînement terminé", "Les données ont été extraites avec succès !")
 
-def compare_color_distance(color1, color_list):
-    distances = [np.linalg.norm(np.array(color1) - np.array(c)) for c in color_list]
-    return min(distances)  # color
 
+#************fonction faire prediction de l image que l utilisateurfait selectionner dans interface 2
 def predict_image(img_path):
     dominant_color = extract_dominant_color(img_path)
     
@@ -204,3 +234,5 @@ def predict_image(img_path):
     else:
         confidence = max(50, int(100 - total_score_dog))
         return f"{confidence}% chien"
+    
+
