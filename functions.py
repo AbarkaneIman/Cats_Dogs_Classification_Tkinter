@@ -11,7 +11,7 @@ from PIL import Image, ImageTk
 # Dossiers pour stocker les images de chats et de chiens
 CAT_FOLDER="assets/images/cats"
 
-DOG_FOLDER ="C:/Users/pc/Desktop/python projects/tkinter_projetcs/cats_dogs_classification_project/assets/images/dogs"
+DOG_FOLDER ="assets/images/dogs"
 # Initialiser les listes
 dataset = []  # Stocker les données prêtes pour l’entraînement
 selected_images_chat = []  # Stocker les chemins des images de chats sélectionnées
