@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 
 
 # Dossiers pour stocker les images de chats et de chiens
-CAT_FOLDER="C:/Users/pc/Desktop/python projects/tkinter_projetcs/cats_dogs_classification_project/assets/images/cats"
+CAT_FOLDER="assets/images/cats"
 
 DOG_FOLDER ="C:/Users/pc/Desktop/python projects/tkinter_projetcs/cats_dogs_classification_project/assets/images/dogs"
 # Initialiser les listes
