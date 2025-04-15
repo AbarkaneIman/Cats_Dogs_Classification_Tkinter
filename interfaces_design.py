@@ -53,6 +53,9 @@ def build_ui(root):
         highlightthickness=2
     )
     cat_frame.pack()
+    tk.Button(chat_container, bg="#C2B280", fg="white", font=("Arial", 12, "bold"), relief="raised", bd=5,
+              text="Sélectionner des images de chats",
+              command=lambda: choose_images("chat", cat_frame, dog_frame)).pack(pady=5)
 
     # ------ Cadre pour les images de chiens ------
     dog_container = tk.Frame(frames_container, bg="#f7f9fc")
