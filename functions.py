@@ -205,3 +205,6 @@ def predict_image(img_path):
     else:
         confidence = max(50, int(100 - total_score_dog))
         return f"{confidence}% chien"
+
+
+
