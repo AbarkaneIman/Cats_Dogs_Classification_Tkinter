@@ -1,10 +1,10 @@
 import numpy as np
 import os
 import tkinter as tk
-from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
 import cv2
 import random
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
 
 
 
@@ -17,7 +17,6 @@ DOG_FOLDER = r"C:\Users\nihad\OneDrive\Desktop\master\python\Cats_Dogs_Classific
 dataset = []  # Stocker les données prêtes pour l’entraînement
 selected_images_chat = []  # Stocker les chemins des images de chats sélectionnées
 selected_images_dog = []   # Stocker les chemins des images de chiens sélectionnées
-
 
 # Vérifier si les dossiers existent, sinon les créer
 def create_folders():
@@ -66,7 +65,6 @@ def update_display(cat_frame, dog_frame):
         label.image = photo  # Garder une référence de l'image
         label.grid(row=row, column=col, padx=5, pady=5)
 
-
 # Fonction pour choisir les images
 def choose_images(label, cat_frame, dog_frame):
     files = filedialog.askopenfilenames(
@@ -99,8 +97,6 @@ def choose_images(label, cat_frame, dog_frame):
     update_display(cat_frame, dog_frame)
 
 
-
-
 # Fonction pour extraire la couleur dominante
 def extract_dominant_color(img_path):
     img = Image.open(img_path).resize((100, 100))  # Redimensionner l'image à une taille fixe
@@ -109,7 +105,6 @@ def extract_dominant_color(img_path):
     # Calculer la couleur dominante (moyenne des couleurs RGB)
     avg_color = img_array.mean(axis=(0, 1))  # Moyenne des pixels en R, G, B
     return tuple(avg_color.astype(int))  # Retourner les valeurs moyennes des couleurs
-
 
 # Fonction pour extraire les couleurs dominantes des images dans un dossier
 def extract_colors_from_folder(folder_path):
@@ -124,16 +119,13 @@ def extract_colors_from_folder(folder_path):
     
     return dominant_colors
 
-
 # Extraire les couleurs dominantes des images dans le dossier des chats et des chiens
 cats_colors = extract_colors_from_folder(CAT_FOLDER)
 dogs_colors = extract_colors_from_folder(DOG_FOLDER)
 
-
 # Afficher les couleurs dominantes extraites
 print(f"Couleurs dominantes des chats: {cats_colors}")
 print(f"Couleurs dominantes des chiens: {dogs_colors}")
-
 
 #fonction pour detecter la forme approximative des yeux 
 def detect_eye_shapes(folder_path):
@@ -157,14 +149,12 @@ def detect_eye_shapes(folder_path):
 
     return eye_shapes
 
-
 # Extraire la forme approximative des yeux depuis des images dans le dossier des chats et des chiens
 cat_eye_shapes = detect_eye_shapes(CAT_FOLDER)
 dog_eye_shapes = detect_eye_shapes(DOG_FOLDER)
 
 print(f"Formes des yeux des chats : {cat_eye_shapes}")
 print(f"Formes des yeux des chiens : {dog_eye_shapes}")
-
 
 def train_model():
     cats_colors = extract_colors_from_folder(CAT_FOLDER)
@@ -181,38 +171,37 @@ def train_model():
 
     messagebox.showinfo("Entraînement terminé", "Les données ont été extraites avec succès !")
 
+def compare_color_distance(color1, color_list):
+    distances = [np.linalg.norm(np.array(color1) - np.array(c)) for c in color_list]
+    return min(distances)  # color
 
-    
-
-def fake_predict_image(img_path):
-    # Simuler une prédiction aléatoire entre "chat" ou "chien"
-    label = random.choice(["chat", "chien"])
-    pourcentage = random.randint(50, 99)
-    return f"{pourcentage}% {label}"
-
-
-
-
-
-"""
-# Fonction de classification : Classer l'image en chat ou chien basé sur la couleur dominante
-def classify_image(img_path, cat_colors, dog_colors):
+def predict_image(img_path):
     dominant_color = extract_dominant_color(img_path)
     
-    # Calculer la distance entre la couleur dominante et les couleurs des chats et des chiens
-    cat_distances = [np.linalg.norm(np.array(dominant_color) - np.array(c)) for c in cat_colors]
-    dog_distances = [np.linalg.norm(np.array(dominant_color) - np.array(d)) for d in dog_colors]
-    
-    # Trouver la couleur la plus proche parmi les chats et les chiens
-    if min(cat_distances) < min(dog_distances):
-        return "chat"
-    else:
-        return "chien"
-    
+    # shape of eyes
+    img = cv2.imread(img_path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+    eyes = eye_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    eye_shape = "inconnu"
+    for (x, y, w, h) in eyes:
+        ratio = w / h
+        eye_shape = "rond" if ratio < 1.2 else "allongé"
+        break
 
-    # Fonction pour entraîner le modèle basé sur les couleurs dominantes
-def train_model():
-    if len(selected_images_chat) != 10 or len(selected_images_dog) != 10:
-        messagebox.showwarning("Incomplet", "Veuillez sélectionner 10 images de chats ET 10 images de chiens.")
-        return
-"""
+    # Comparaison avec les données entraînées
+    color_distance_cat = compare_color_distance(dominant_color, cats_colors)
+    color_distance_dog = compare_color_distance(dominant_color, dogs_colors)
+
+    eye_score_cat = 0 if eye_shape in cat_eye_shapes else 1
+    eye_score_dog = 0 if eye_shape in dog_eye_shapes else 1
+
+    total_score_cat = color_distance_cat + (eye_score_cat * 50)
+    total_score_dog = color_distance_dog + (eye_score_dog * 50)
+
+    if total_score_cat < total_score_dog:
+        confidence = max(50, int(100 - total_score_cat))
+        return f"{confidence}% chat"
+    else:
+        confidence = max(50, int(100 - total_score_dog))
+        return f"{confidence}% chien"

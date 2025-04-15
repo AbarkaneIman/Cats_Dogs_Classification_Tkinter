@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
-from functions import choose_images, extract_colors_from_folder, update_display, train_model, fake_predict_image
+from functions import choose_images, extract_colors_from_folder, update_display, train_model, predict_image
 
 selected_image_path = ""  # Globale pour la prédiction
 
@@ -82,7 +82,7 @@ def build_ui(root):
 
     def on_predict_click():
         if selected_image_path:
-            result = fake_predict_image(selected_image_path)
+            result = predict_image(selected_image_path)
             result_label.config(text=result)
 
     tk.Button(frame_right, text="Prédiction", command=on_predict_click).pack(pady=5)
