@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
-from functions import choose_images, extract_colors_from_folder, update_display, train_model, predict_image
+from functions import browse_image, choose_images, extract_colors_from_images, predir_animal, update_display, train_model, predict_image
 
 selected_image_path = ""  # Globale pour la prédiction
 
@@ -100,16 +100,6 @@ def build_ui(root):
     img_placeholder = tk.Label(frame_left, text="Chat ou chien", width=20, height=10, bg="white")
     img_placeholder.pack(pady=10)
 
-    def browse_image():
-        global selected_image_path
-        selected_image_path = filedialog.askopenfilename()
-        if selected_image_path:
-            img = Image.open(selected_image_path)
-            img = img.resize((150, 150))
-            img_tk = ImageTk.PhotoImage(img)
-            img_placeholder.config(image=img_tk, text="")
-            img_placeholder.image = img_tk
-
     tk.Button(frame_left, text="Parcourir", command=browse_image).pack(pady=10)
 
     frame_right = tk.Frame(page_prediction, bd=2, relief="groove")
@@ -123,7 +113,7 @@ def build_ui(root):
 
     def on_predict_click():
         if selected_image_path:
-            result = predict_image(selected_image_path)
+            result = predir_animal(browse_image)
             result_label.config(text=result)
 
     tk.Button(frame_right, text="Prédiction", command=on_predict_click).pack(pady=5)
